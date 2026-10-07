@@ -358,7 +358,21 @@
       // Собираем данные из формы в один объект.
       // Имена ключей совпадают с теми, что бот ожидает.
       function collectFormData() {
+        // Достаём user_id из данных MAX.
+        // window.WebApp.initDataUnsafe.user.id — это id пользователя.
+        // Если открыто в браузере без MAX — user_id не будет,
+        // бот ответит ошибкой (это нормально).
+        let userId = null;
+        if (
+          window.WebApp &&
+          window.WebApp.initDataUnsafe &&
+          window.WebApp.initDataUnsafe.user
+        ) {
+          userId = window.WebApp.initDataUnsafe.user.id;
+        }
+
         return {
+          user_id: userId,
           address: fields.address.value.trim(),
           date: fields.date.value,
           time: fields.time.value,
@@ -367,9 +381,8 @@
           client_rate: parseInt(fields.client_rate.value, 10),
           loader_rate: parseInt(fields.loader_rate.value, 10),
           creator_is_loader: creatorIsLoader,
-          // initData — данные о пользователе от MAX.
-          // Пока отправляем как есть, бот их пока не проверяет.
-          // Когда добавим валидацию — бот начнёт их сверять.
+          // initData — полная строка от MAX.
+          // Пока бот её не проверяет, но отправляем на будущее.
           init_data:
             window.WebApp && window.WebApp.initData
               ? window.WebApp.initData
