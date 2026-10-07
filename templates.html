@@ -228,11 +228,12 @@
       }
 
       // «Использовать» — сохраняем данные шаблона и идём на create.html.
-      // Через sessionStorage — данные видны только внутри этой сессии,
-      // и не мешают другим вкладкам.
+      // Идём напрямую, минуя роутер index.html: если пройти через него,
+      // MAX подставит старый start_param (templates), и мы вернёмся
+      // обратно на эту же страницу.
       function useTemplate(t) {
         sessionStorage.setItem("template_data", JSON.stringify(t));
-        window.location.href = "index.html?startapp=create";
+        window.location.href = "create.html";
       }
 
       // «Удалить» — заглушка. Реальный эндпоинт сделаем следующим шагом.
