@@ -416,13 +416,16 @@
             return;
           }
 
-          // ВРЕМЕННО: диагностика. Уберём, когда всё заработает.
-          alert("Пришли данные шаблона: " + JSON.stringify(result.template));
-          applyTemplate(result.template);
-          alert("Поля заполнены. Проверь форму.");
+          // Пробуем применить данные. Если что-то падает —
+          // покажем настоящую ошибку в статусе, а не общее
+          // «не удалось связаться».
+          try {
+            applyTemplate(result.template);
+          } catch (applyErr) {
+            showStatus("error", "Ошибка при заполнении: " + applyErr.message);
+          }
         } catch (err) {
-          console.error("Ошибка загрузки шаблона:", err);
-          showStatus("error", "Не удалось связаться с ботом.");
+          showStatus("error", "Ошибка: " + err.message);
         }
       }
 
