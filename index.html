@@ -3,324 +3,56 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Создание заявки</title>
+    <title>Gruz Bot</title>
     <script src="https://st.max.ru/js/max-web-app.js"></script>
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
-        background: #f2f2f7;
-        color: #1c1c1e;
-        padding: 16px;
-        min-height: 100vh;
-      }
-
-      .card {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-      }
-
-      h1 {
-        font-size: 22px;
-        font-weight: 600;
-        margin-bottom: 4px;
-      }
-
-      .subtitle {
-        font-size: 14px;
-        color: #8e8e93;
-        margin-bottom: 20px;
-      }
-
-      label {
-        display: block;
-        font-size: 13px;
-        font-weight: 500;
-        color: #8e8e93;
-        margin-bottom: 6px;
-        margin-top: 14px;
-      }
-
-      label:first-of-type {
-        margin-top: 0;
-      }
-
-      input[type="text"],
-      input[type="number"],
-      input[type="time"],
-      input[type="date"],
-      textarea {
-        width: 100%;
-        padding: 12px 14px;
-        font-size: 16px;
-        font-family: inherit;
-        border: 1.5px solid #e5e5ea;
-        border-radius: 10px;
-        background: #f9f9fb;
-        color: #1c1c1e;
-        transition: border-color 0.15s;
-      }
-
-      input:focus,
-      textarea:focus {
-        outline: none;
-        border-color: #0a84ff;
-        background: #ffffff;
-      }
-
-      textarea {
-        resize: vertical;
-        min-height: 90px;
-      }
-
-      .row {
-        display: flex;
-        gap: 12px;
-      }
-
-      .row > div {
-        flex: 1;
-      }
-
-      .toggle {
-        display: flex;
-        gap: 8px;
-        margin-top: 6px;
-      }
-
-      .toggle button {
-        flex: 1;
-        padding: 12px;
-        font-size: 15px;
-        font-weight: 500;
-        border: 1.5px solid #e5e5ea;
-        background: #f9f9fb;
-        color: #1c1c1e;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-
-      .toggle button.active {
-        border-color: #0a84ff;
-        background: #0a84ff;
-        color: #ffffff;
-      }
-
-      .actions {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: 8px;
-      }
-
-      .btn-primary {
-        padding: 16px;
-        font-size: 16px;
-        font-weight: 600;
-        border: none;
-        border-radius: 12px;
-        background: #0a84ff;
-        color: #ffffff;
-        cursor: pointer;
-      }
-
-      .btn-primary:active {
-        background: #0060df;
-      }
-
-      .btn-secondary {
-        padding: 16px;
-        font-size: 16px;
-        font-weight: 600;
-        border: 1.5px solid #0a84ff;
-        border-radius: 12px;
-        background: transparent;
-        color: #0a84ff;
-        cursor: pointer;
-      }
-
-      .btn-secondary:active {
-        background: #eaf4ff;
-      }
-
-      .preview-block {
-        font-size: 14px;
-        line-height: 1.6;
-        color: #3a3a3c;
-        white-space: pre-line;
-      }
-
-      .preview-block b {
-        color: #1c1c1e;
-      }
-    </style>
   </head>
   <body>
-    <div class="card">
-      <h1>📝 Новая заявка</h1>
-      <p class="subtitle">Заполни все поля и опубликуй в канал</p>
-
-      <label>Адрес</label>
-      <input
-        type="text"
-        id="address"
-        placeholder="Например: Хевешская 1к1"
-        maxlength="300"
-      />
-
-      <div class="row">
-        <div>
-          <label>Дата</label>
-          <input type="date" id="date" />
-        </div>
-        <div>
-          <label>Время</label>
-          <input type="time" id="time" />
-        </div>
-      </div>
-
-      <label>Описание</label>
-      <textarea
-        id="description"
-        placeholder="Что нести, сколько этажей, есть ли лифт, что-то особенное"
-        maxlength="1500"
-      ></textarea>
-    </div>
-
-    <div class="card">
-      <label>Иду сам грузчиком?</label>
-      <div class="toggle" id="creator-toggle">
-        <button type="button" data-value="yes">ДА</button>
-        <button type="button" data-value="no" class="active">НЕТ</button>
-      </div>
-
-      <label>Общее количество грузчиков</label>
-      <input type="number" id="total_count" min="1" max="100" value="2" />
-
-      <div class="row">
-        <div>
-          <label>Ставка клиенту (₽/час)</label>
-          <input type="number" id="client_rate" min="750" value="800" />
-        </div>
-        <div>
-          <label>Ставка грузчику (₽/час)</label>
-          <input type="number" id="loader_rate" min="600" value="700" />
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <label>Предпросмотр</label>
-      <div class="preview-block" id="preview">
-        Заполни поля выше — здесь появится готовая заявка
-      </div>
-    </div>
-
-    <div class="card actions">
-      <button class="btn-primary" id="btn-publish">ОПУБЛИКОВАТЬ</button>
-      <button class="btn-secondary" id="btn-publish-save">
-        СОХРАНИТЬ и ОПУБЛИКОВАТЬ
-      </button>
-    </div>
+    <p style="font-family: sans-serif; padding: 20px; color: #8e8e93">
+      Загрузка...
+    </p>
 
     <script>
-      // Адрес API бота. Пока локальный через LocalTunnel —
-      // при каждом перезапуске туннеля меняется, впиши новый.
-      // Когда переедем на Amvera — тут будет постоянный адрес.
-      const API_URL = "https://shiny-rooms-love.loca.lt";
+      // Роутер мини-приложения.
+      // Смотрит на параметр startapp в адресе и перенаправляет
+      // пользователя на нужную страницу.
+      //
+      // Примеры:
+      //   ?startapp=create       → create.html (создание заявки)
+      //   ?startapp=my_requests  → my_requests.html (мои заявки)
+      //   без параметра          → create.html (по умолчанию)
 
-      const fields = {
-        address: document.getElementById("address"),
-        date: document.getElementById("date"),
-        time: document.getElementById("time"),
-        description: document.getElementById("description"),
-        total_count: document.getElementById("total_count"),
-        client_rate: document.getElementById("client_rate"),
-        loader_rate: document.getElementById("loader_rate"),
-      };
+      // Как получить параметр из URL:
+      //   1. Если мини-приложение открыто через MAX — параметр в window.WebApp.initDataUnsafe.start_param
+      //   2. Если открыто в браузере — параметр в обычных GET-параметрах URL
+      let page = "create";
 
-      const preview = document.getElementById("preview");
-      const toggleButtons = document.querySelectorAll("#creator-toggle button");
-
-      let creatorIsLoader = false;
-
-      // Переключение ДА / НЕТ для «Иду сам грузчиком?»
-      toggleButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          toggleButtons.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          creatorIsLoader = btn.dataset.value === "yes";
-          updatePreview();
-        });
-      });
-
-      // Обновление предпросмотра при вводе
-      Object.values(fields).forEach((f) => {
-        f.addEventListener("input", updatePreview);
-      });
-
-      function updatePreview() {
-        const address = fields.address.value.trim();
-        const date = fields.date.value;
-        const time = fields.time.value;
-        const description = fields.description.value.trim();
-        const total = fields.total_count.value || "—";
-        const clientRate = fields.client_rate.value || "—";
-        const loaderRate = fields.loader_rate.value || "—";
-        const goes = creatorIsLoader ? "ДА" : "НЕТ";
-
-        if (!address && !date && !time && !description) {
-          preview.textContent =
-            "Заполни поля выше — здесь появится готовая заявка";
-          return;
+      // Пытаемся взять из MAX
+      if (window.WebApp && window.WebApp.initDataUnsafe) {
+        const startParam = window.WebApp.initDataUnsafe.start_param;
+        if (startParam) {
+          page = startParam;
         }
-
-        const formattedDate = date
-          ? date.split("-").reverse().slice(0, 2).join(".")
-          : "—";
-
-        preview.innerHTML =
-          `<b>${address || "—"}</b>\n` +
-          `${time || "—"}  (${formattedDate})\n` +
-          `${total} всего · ${goes} иду сам\n` +
-          `${clientRate}/${loaderRate} ₽/час\n\n` +
-          `${description || "—"}`;
       }
 
-      // Заглушки кнопок — пока ничего не делают
-      document.getElementById("btn-publish").addEventListener("click", () => {
-        alert("Кнопка «Опубликовать» пока не подключена к боту.");
-      });
+      // Если не получилось (например, страница открыта в браузере напрямую) —
+      // пробуем взять из обычных параметров URL
+      if (page === "create") {
+        const params = new URLSearchParams(window.location.search);
+        const urlParam = params.get("startapp");
+        if (urlParam) {
+          page = urlParam;
+        }
+      }
 
-      document
-        .getElementById("btn-publish-save")
-        .addEventListener("click", () => {
-          alert("Кнопка «Сохранить и опубликовать» пока не подключена к боту.");
-        });
+      // Карта: какой параметр — какая страница.
+      const ROUTES = {
+        create: "create.html",
+        my_requests: "my_requests.html",
+      };
 
-      updatePreview();
-
-      // Проверяем связь с ботом при загрузке страницы.
-      // Если ответ получен — в консоли браузера увидим сообщение.
-      // Пользователю пока ничего не показываем, просто проверка.
-      fetch(`${API_URL}/api/ping`)
-        .then((r) => r.json())
-        .then((data) => {
-          console.log("Связь с ботом:", data);
-        })
-        .catch((err) => {
-          console.error("Связь с ботом не работает:", err);
-        });
+      // Если параметр неизвестен — идём на create.html по умолчанию.
+      const target = ROUTES[page] || ROUTES["create"];
+      window.location.replace(target);
     </script>
   </body>
 </html>
