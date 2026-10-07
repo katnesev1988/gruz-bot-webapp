@@ -166,14 +166,14 @@
       const listBox = document.getElementById("list");
       const statusBox = document.getElementById("status");
 
-      // Достаём user_id из данных MAX.
-      function getUserId() {
-        if (
-          window.WebApp &&
-          window.WebApp.initDataUnsafe &&
-          window.WebApp.initDataUnsafe.user
-        ) {
-          return window.WebApp.initDataUnsafe.user.id;
+      // Достаём initData из MAX. Это закодированная строка,
+      // которую бот проверяет по токену — единственный надёжный
+      // способ подтвердить, что запрос идёт от настоящего пользователя.
+      // initDataUnsafe.user.id использовать нельзя: документация MAX
+      // прямо запрещает применять его для валидации.
+      function getInitData() {
+        if (window.WebApp && window.WebApp.initData) {
+          return window.WebApp.initData;
         }
         return null;
       }
@@ -227,10 +227,6 @@
           .replace(/>/g, "&gt;");
       }
 
-      // «Использовать» — сохраняем данные шаблона и идём на create.html.
-      // Идём напрямую, минуя роутер index.html: если пройти через него,
-      // MAX подставит старый start_param (templates), и мы вернёмся
-      // обратно на эту же страницу.
       // «Использовать» — переходим на страницу создания,
       // передаём id шаблона прямо в адресе.
       // Память браузера (sessionStorage) не используем:
@@ -241,10 +237,11 @@
       }
 
       // «Удалить» — отправляем запрос боту и убираем карточку из списка.
-      // Если бот ответил ошибкой — показываем статус, карточку не трогаем.
+      // user_id больше не передаём в URL: бот сам достанет его
+      // из initData после проверки подписи.
       async function deleteTemplate(id, card) {
-        const userId = getUserId();
-        if (!userId) {
+        const initData = getInitData();
+        if (!initData) {
           showError("Не удалось определить пользователя. Открой через MAX.");
           return;
         }
@@ -252,10 +249,12 @@
         hideStatus();
 
         try {
-          const response = await fetch(
-            `${API_URL}/api/template/${id}/delete?user_id=${userId}`,
-            { method: "POST" }
-          );
+          const response = await fetch(`${API_URL}/api/template/${id}/delete`, {
+            method: "POST",
+            headers: {
+              "X-Init-Data": initData,
+            },
+          });
           const result = await response.json();
 
           if (!result.ok) {
@@ -282,17 +281,19 @@
         hideStatus();
         listBox.innerHTML = '<div class="loading">Загружаем шаблоны...</div>';
 
-        const userId = getUserId();
-        if (!userId) {
+        const initData = getInitData();
+        if (!initData) {
           listBox.innerHTML = "";
           showError("Не удалось определить пользователя. Открой через MAX.");
           return;
         }
 
         try {
-          const response = await fetch(
-            `${API_URL}/api/templates?user_id=${userId}`
-          );
+          const response = await fetch(`${API_URL}/api/templates`, {
+            headers: {
+              "X-Init-Data": initData,
+            },
+          });
           const result = await response.json();
 
           if (!result.ok) {
