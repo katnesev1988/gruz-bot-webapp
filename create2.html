@@ -416,7 +416,10 @@
             return;
           }
 
+          // ВРЕМЕННО: диагностика. Уберём, когда всё заработает.
+          alert("Пришли данные шаблона: " + JSON.stringify(result.template));
           applyTemplate(result.template);
+          alert("Поля заполнены. Проверь форму.");
         } catch (err) {
           console.error("Ошибка загрузки шаблона:", err);
           showStatus("error", "Не удалось связаться с ботом.");
