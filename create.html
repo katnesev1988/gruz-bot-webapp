@@ -349,6 +349,49 @@
         statusBox.textContent = text;
       }
 
+      // Преобразует дату из шаблона (ДД.ММ) в формат input type="date"
+      // (YYYY-MM-DD). Год берём текущий.
+      function ddmmToIso(ddmm) {
+        const parts = String(ddmm || "").split(".");
+        if (parts.length !== 2) return "";
+        const d = parts[0].padStart(2, "0");
+        const m = parts[1].padStart(2, "0");
+        const y = new Date().getFullYear();
+        return `${y}-${m}-${d}`;
+      }
+
+      // Если на странице есть данные шаблона (положил templates.html) —
+      // заполняем поля формы. После подстановки чистим хранилище,
+      // чтобы при следующем заходе без шаблона поля были пустыми.
+      function loadTemplateIfAny() {
+        const raw = sessionStorage.getItem("template_data");
+        if (!raw) return;
+
+        try {
+          const t = JSON.parse(raw);
+
+          fields.address.value = t.address || "";
+          fields.date.value = ddmmToISO(t.date);
+          fields.time.value = t.time || "";
+          fields.description.value = t.description || "";
+          fields.total_count.value = t.total_count || 1;
+          fields.client_rate.value = t.client_rate || 750;
+          fields.loader_rate.value = t.loader_rate || 600;
+
+          // Переключатель «иду сам» — ставим активную кнопку.
+          creatorIsLoader = Boolean(t.creator_is_loader);
+          toggleButtons.forEach((b) => {
+            const isYes = b.dataset.value === "yes";
+            b.classList.toggle("active", isYes === creatorIsLoader);
+          });
+        } catch (err) {
+          console.error("Не удалось прочитать данные шаблона:", err);
+        } finally {
+          // Чистим, чтобы не подставлялось дважды.
+          sessionStorage.removeItem("template_data");
+        }
+      }
+
       // Скрыть статус.
       function hideStatus() {
         statusBox.className = "status";
@@ -456,6 +499,7 @@
         submitForm(true);
       });
 
+      loadTemplateIfAny();
       updatePreview();
 
       // Проверяем связь с ботом при загрузке страницы.
