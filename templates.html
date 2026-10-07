@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Шаблоны</title>
+    <script src="https://st.max.ru/js/max-web-app.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f2f2f7;
+        color: #1c1c1e;
+        padding: 16px;
+        min-height: 100vh;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        color: #8e8e93;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+
+      .card-address {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+
+      .card-details {
+        font-size: 14px;
+        color: #3a3a3c;
+        line-height: 1.5;
+        margin-bottom: 12px;
+      }
+
+      .card-details .row {
+        display: flex;
+        gap: 12px;
+      }
+
+      .card-details .label {
+        color: #8e8e93;
+      }
+
+      .card-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .card-actions button {
+        flex: 1;
+        padding: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .btn-use {
+        border: none;
+        background: #0a84ff;
+        color: #ffffff;
+      }
+
+      .btn-use:active {
+        background: #0060df;
+      }
+
+      .btn-delete {
+        border: 1.5px solid #ff3b30;
+        background: transparent;
+        color: #ff3b30;
+      }
+
+      .btn-delete:active {
+        background: #ffeaea;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #8e8e93;
+        font-size: 15px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px 20px;
+        color: #8e8e93;
+        font-size: 15px;
+      }
+
+      .status {
+        display: none;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 15px;
+        line-height: 1.5;
+        margin-bottom: 16px;
+      }
+
+      .status.show {
+        display: block;
+      }
+
+      .status.error {
+        background: #ffeaea;
+        color: #c52c2c;
+      }
+
+      .status.success {
+        background: #e3f7e8;
+        color: #1c7c34;
+      }
+
+      /* Кнопка возврата к созданию заявки */
+      .back-link {
+        display: inline-block;
+        color: #0a84ff;
+        text-decoration: none;
+        font-size: 15px;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📋 Шаблоны</h1>
+    <p class="subtitle">
+      Нажми «Использовать», чтобы создать заявку по шаблону
+    </p>
+
+    <div class="status" id="status"></div>
+    <div id="list"></div>
+
+    <a class="back-link" href="index.html?startapp=create">
+      ← Вернуться к созданию
+    </a>
+
+    <script>
+      // Адрес API бота. Пока локальный через LocalTunnel —
+      // при перезапуске туннеля меняется, впиши новый.
+      const API_URL = "https://shiny-rooms-love.loca.lt";
+
+      const listBox = document.getElementById("list");
+      const statusBox = document.getElementById("status");
+
+      // Достаём user_id из данных MAX.
+      function getUserId() {
+        if (
+          window.WebApp &&
+          window.WebApp.initDataUnsafe &&
+          window.WebApp.initDataUnsafe.user
+        ) {
+          return window.WebApp.initDataUnsafe.user.id;
+        }
+        return null;
+      }
+
+      function showError(text) {
+        statusBox.className = "status show error";
+        statusBox.textContent = text;
+      }
+
+      function hideStatus() {
+        statusBox.className = "status";
+        statusBox.textContent = "";
+      }
+
+      // Собираем HTML карточки одного шаблона.
+      function renderTemplate(t) {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const goes = t.creator_is_loader ? "ДА" : "НЕТ";
+
+        card.innerHTML = `
+          <div class="card-address">${escapeHtml(t.address)}</div>
+          <div class="card-details">
+            <div>${t.time}  (${t.date})</div>
+            <div>Грузчиков: ${t.total_count} · иду сам: ${goes}</div>
+            <div>Ставки: ${t.client_rate}/${t.loader_rate} ₽/час</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-use">ИСПОЛЬЗОВАТЬ</button>
+            <button class="btn-delete">УДАЛИТЬ</button>
+          </div>
+        `;
+
+        card.querySelector(".btn-use").addEventListener("click", () => {
+          useTemplate(t);
+        });
+
+        card.querySelector(".btn-delete").addEventListener("click", () => {
+          deleteTemplate(t.id, card);
+        });
+
+        return card;
+      }
+
+      // Простое экранирование, чтобы адрес с <, >, & не сломал разметку.
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      // «Использовать» — сохраняем данные шаблона и идём на create.html.
+      // Через sessionStorage — данные видны только внутри этой сессии,
+      // и не мешают другим вкладкам.
+      function useTemplate(t) {
+        sessionStorage.setItem("template_data", JSON.stringify(t));
+        window.location.href = "index.html?startapp=create";
+      }
+
+      // «Удалить» — заглушка. Реальный эндпоинт сделаем следующим шагом.
+      function deleteTemplate(id, card) {
+        alert("Удаление пока не подключено. Сделаем следующим шагом.");
+      }
+
+      // Загрузка списка шаблонов.
+      async function loadTemplates() {
+        hideStatus();
+        listBox.innerHTML = '<div class="loading">Загружаем шаблоны...</div>';
+
+        const userId = getUserId();
+        if (!userId) {
+          listBox.innerHTML = "";
+          showError("Не удалось определить пользователя. Открой через MAX.");
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_URL}/api/templates?user_id=${userId}`
+          );
+          const result = await response.json();
+
+          if (!result.ok) {
+            listBox.innerHTML = "";
+            showError("Ошибка: " + (result.error || "неизвестная"));
+            return;
+          }
+
+          if (!result.templates || result.templates.length === 0) {
+            listBox.innerHTML =
+              '<div class="empty">📭 У тебя нет сохранённых шаблонов</div>';
+            return;
+          }
+
+          listBox.innerHTML = "";
+          result.templates.forEach((t) => {
+            listBox.appendChild(renderTemplate(t));
+          });
+        } catch (err) {
+          console.error("Ошибка загрузки:", err);
+          listBox.innerHTML = "";
+          showError("Не удалось связаться с ботом. Попробуй позже.");
+        }
+      }
+
+      // При загрузке страницы.
+      loadTemplates();
+    </script>
+  </body>
+</html>
