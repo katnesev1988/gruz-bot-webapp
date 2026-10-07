@@ -370,6 +370,34 @@
         try {
           const t = JSON.parse(raw);
 
+          // ВРЕМЕННО: показываем, что пришло из шаблона.
+          alert(
+            "Данные шаблона:\n" +
+              "address=" +
+              t.address +
+              "\n" +
+              "date=" +
+              t.date +
+              "\n" +
+              "time=" +
+              t.time +
+              "\n" +
+              "description=" +
+              t.description +
+              "\n" +
+              "total_count=" +
+              t.total_count +
+              "\n" +
+              "client_rate=" +
+              t.client_rate +
+              "\n" +
+              "loader_rate=" +
+              t.loader_rate +
+              "\n" +
+              "creator_is_loader=" +
+              t.creator_is_loader
+          );
+
           fields.address.value = t.address || "";
           fields.date.value = ddmmToISO(t.date);
           fields.time.value = t.time || "";
@@ -385,7 +413,7 @@
             b.classList.toggle("active", isYes === creatorIsLoader);
           });
         } catch (err) {
-          console.error("Не удалось прочитать данные шаблона:", err);
+          alert("ОШИБКА при чтении шаблона: " + err.message);
         } finally {
           // Чистим, чтобы не подставлялось дважды.
           sessionStorage.removeItem("template_data");
