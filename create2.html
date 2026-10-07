@@ -277,8 +277,7 @@
 
     <script>
       // Адрес API бота. Пока локальный через LocalTunnel —
-      // при каждом перезапуске туннеля меняется, впиши новый.
-      // Когда переедем на Amvera — тут будет постоянный адрес.
+      // при перезапуске туннеля меняется, впиши новый.
       const API_URL = "https://khaki-bugs-hide.loca.lt";
 
       const fields = {
@@ -298,6 +297,16 @@
       const btnPublishSave = document.getElementById("btn-publish-save");
 
       let creatorIsLoader = false;
+
+      // Достаём initData из MAX. Это закодированная строка,
+      // которую бот проверяет по токену — единственный надёжный
+      // способ подтвердить, что запрос идёт от настоящего пользователя.
+      function getInitData() {
+        if (window.WebApp && window.WebApp.initData) {
+          return window.WebApp.initData;
+        }
+        return null;
+      }
 
       // Переключение ДА / НЕТ для «Иду сам грузчиком?»
       toggleButtons.forEach((btn) => {
@@ -388,23 +397,20 @@
         const templateId = params.get("template_id");
         if (!templateId) return;
 
-        let userId = null;
-        if (
-          window.WebApp &&
-          window.WebApp.initDataUnsafe &&
-          window.WebApp.initDataUnsafe.user
-        ) {
-          userId = window.WebApp.initDataUnsafe.user.id;
-        }
-
-        if (!userId) {
+        const initData = getInitData();
+        if (!initData) {
           showStatus("error", "Не удалось определить пользователя.");
           return;
         }
 
         try {
           const response = await fetch(
-            `${API_URL}/api/template/${templateId}?user_id=${userId}`
+            `${API_URL}/api/template/${templateId}`,
+            {
+              headers: {
+                "X-Init-Data": initData,
+              },
+            }
           );
           const result = await response.json();
 
@@ -416,9 +422,6 @@
             return;
           }
 
-          // Пробуем применить данные. Если что-то падает —
-          // покажем настоящую ошибку в статусе, а не общее
-          // «не удалось связаться».
           try {
             applyTemplate(result.template);
           } catch (applyErr) {
@@ -436,23 +439,10 @@
       }
 
       // Собираем данные из формы в один объект.
-      // Имена ключей совпадают с теми, что бот ожидает.
+      // user_id и init_data тут не нужны: user_id бот достанет
+      // из заголовка X-Init-Data после проверки подписи.
       function collectFormData() {
-        // Достаём user_id из данных MAX.
-        // window.WebApp.initDataUnsafe.user.id — это id пользователя.
-        // Если открыто в браузере без MAX — user_id не будет,
-        // бот ответит ошибкой (это нормально).
-        let userId = null;
-        if (
-          window.WebApp &&
-          window.WebApp.initDataUnsafe &&
-          window.WebApp.initDataUnsafe.user
-        ) {
-          userId = window.WebApp.initDataUnsafe.user.id;
-        }
-
         return {
-          user_id: userId,
           address: fields.address.value.trim(),
           date: fields.date.value,
           time: fields.time.value,
@@ -461,12 +451,6 @@
           client_rate: parseInt(fields.client_rate.value, 10),
           loader_rate: parseInt(fields.loader_rate.value, 10),
           creator_is_loader: creatorIsLoader,
-          // initData — полная строка от MAX.
-          // Пока бот её не проверяет, но отправляем на будущее.
-          init_data:
-            window.WebApp && window.WebApp.initData
-              ? window.WebApp.initData
-              : null,
         };
       }
 
@@ -487,6 +471,15 @@
       async function submitForm(saveToTemplates) {
         hideStatus();
 
+        const initData = getInitData();
+        if (!initData) {
+          showStatus(
+            "error",
+            "Не удалось определить пользователя. Открой через MAX."
+          );
+          return;
+        }
+
         const data = collectFormData();
         data.save_to_templates = saveToTemplates;
 
@@ -498,6 +491,7 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "X-Init-Data": initData,
             },
             body: JSON.stringify(data),
           });
