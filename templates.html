@@ -233,7 +233,8 @@
       // обратно на эту же страницу.
       function useTemplate(t) {
         sessionStorage.setItem("template_data", JSON.stringify(t));
-        window.location.href = "create.html";
+        // Случайный параметр ?v=... — обход кэша MAX.
+        window.location.href = "create.html?v=" + Date.now();
       }
 
       // «Удалить» — заглушка. Реальный эндпоинт сделаем следующим шагом.

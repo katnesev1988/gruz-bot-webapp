@@ -53,7 +53,9 @@
 
       // Если параметр неизвестен — идём на create.html по умолчанию.
       const target = ROUTES[page] || ROUTES["create"];
-      window.location.replace(target);
+      // Добавляем случайный параметр ?v=... — так MAX и браузер
+      // не возьмут старую версию страницы из кэша.
+      window.location.replace(target + "?v=" + Date.now());
     </script>
   </body>
 </html>
