@@ -351,7 +351,7 @@
 
       // Преобразует дату из шаблона (ДД.ММ) в формат input type="date"
       // (YYYY-MM-DD). Год берём текущий.
-      function ddmmToIso(ddmm) {
+      function ddmmToISO(ddmm) {
         const parts = String(ddmm || "").split(".");
         if (parts.length !== 2) return "";
         const d = parts[0].padStart(2, "0");
