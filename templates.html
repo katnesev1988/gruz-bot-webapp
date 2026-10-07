@@ -231,9 +231,13 @@
       // Идём напрямую, минуя роутер index.html: если пройти через него,
       // MAX подставит старый start_param (templates), и мы вернёмся
       // обратно на эту же страницу.
+      // «Использовать» — переходим на страницу создания,
+      // передаём id шаблона прямо в адресе.
+      // Память браузера (sessionStorage) не используем:
+      // MAX может открывать каждую страницу в отдельном окне,
+      // и данные из памяти одной страницы не видны другой.
       function useTemplate(t) {
-        sessionStorage.setItem("template_data", JSON.stringify(t));
-        window.location.href = "create2.html";
+        window.location.href = "create2.html?template_id=" + t.id;
       }
 
       // «Удалить» — заглушка. Реальный эндпоинт сделаем следующим шагом.
