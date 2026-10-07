@@ -240,9 +240,41 @@
         window.location.href = "create2.html?template_id=" + t.id;
       }
 
-      // «Удалить» — заглушка. Реальный эндпоинт сделаем следующим шагом.
-      function deleteTemplate(id, card) {
-        alert("Удаление пока не подключено. Сделаем следующим шагом.");
+      // «Удалить» — отправляем запрос боту и убираем карточку из списка.
+      // Если бот ответил ошибкой — показываем статус, карточку не трогаем.
+      async function deleteTemplate(id, card) {
+        const userId = getUserId();
+        if (!userId) {
+          showError("Не удалось определить пользователя. Открой через MAX.");
+          return;
+        }
+
+        hideStatus();
+
+        try {
+          const response = await fetch(
+            `${API_URL}/api/template/${id}/delete?user_id=${userId}`,
+            { method: "POST" }
+          );
+          const result = await response.json();
+
+          if (!result.ok) {
+            showError("Не удалось удалить: " + (result.error || "ошибка"));
+            return;
+          }
+
+          // Убираем карточку из списка.
+          card.remove();
+
+          // Если карточек больше не осталось — показываем «пусто».
+          if (listBox.children.length === 0) {
+            listBox.innerHTML =
+              '<div class="empty">📭 У тебя нет сохранённых шаблонов</div>';
+          }
+        } catch (err) {
+          console.error("Ошибка удаления:", err);
+          showError("Не удалось связаться с ботом. Попробуй позже.");
+        }
       }
 
       // Загрузка списка шаблонов.
