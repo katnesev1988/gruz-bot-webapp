@@ -138,6 +138,11 @@
         background: #0060df;
       }
 
+      .btn-primary:disabled {
+        background: #b0b0b5;
+        cursor: not-allowed;
+      }
+
       .btn-secondary {
         padding: 16px;
         font-size: 16px;
@@ -153,6 +158,12 @@
         background: #eaf4ff;
       }
 
+      .btn-secondary:disabled {
+        border-color: #b0b0b5;
+        color: #b0b0b5;
+        cursor: not-allowed;
+      }
+
       .preview-block {
         font-size: 14px;
         line-height: 1.6;
@@ -162,6 +173,35 @@
 
       .preview-block b {
         color: #1c1c1e;
+      }
+
+      /* Статус отправки — появляется внизу страницы после нажатия */
+      .status {
+        display: none;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 15px;
+        line-height: 1.5;
+        margin-bottom: 16px;
+      }
+
+      .status.show {
+        display: block;
+      }
+
+      .status.loading {
+        background: #eaf4ff;
+        color: #0a84ff;
+      }
+
+      .status.success {
+        background: #e3f7e8;
+        color: #1c7c34;
+      }
+
+      .status.error {
+        background: #ffeaea;
+        color: #c52c2c;
       }
     </style>
   </head>
@@ -226,6 +266,8 @@
       </div>
     </div>
 
+    <div class="status" id="status"></div>
+
     <div class="card actions">
       <button class="btn-primary" id="btn-publish">ОПУБЛИКОВАТЬ</button>
       <button class="btn-secondary" id="btn-publish-save">
@@ -251,6 +293,9 @@
 
       const preview = document.getElementById("preview");
       const toggleButtons = document.querySelectorAll("#creator-toggle button");
+      const statusBox = document.getElementById("status");
+      const btnPublish = document.getElementById("btn-publish");
+      const btnPublishSave = document.getElementById("btn-publish-save");
 
       let creatorIsLoader = false;
 
@@ -297,22 +342,110 @@
           `${description || "—"}`;
       }
 
-      // Заглушки кнопок — пока ничего не делают
-      document.getElementById("btn-publish").addEventListener("click", () => {
-        alert("Кнопка «Опубликовать» пока не подключена к боту.");
+      // Показать статус внизу страницы.
+      // type: "loading" | "success" | "error"
+      function showStatus(type, text) {
+        statusBox.className = "status show " + type;
+        statusBox.textContent = text;
+      }
+
+      // Скрыть статус.
+      function hideStatus() {
+        statusBox.className = "status";
+        statusBox.textContent = "";
+      }
+
+      // Собираем данные из формы в один объект.
+      // Имена ключей совпадают с теми, что бот ожидает.
+      function collectFormData() {
+        return {
+          address: fields.address.value.trim(),
+          date: fields.date.value,
+          time: fields.time.value,
+          description: fields.description.value.trim(),
+          total_count: parseInt(fields.total_count.value, 10),
+          client_rate: parseInt(fields.client_rate.value, 10),
+          loader_rate: parseInt(fields.loader_rate.value, 10),
+          creator_is_loader: creatorIsLoader,
+          // initData — данные о пользователе от MAX.
+          // Пока отправляем как есть, бот их пока не проверяет.
+          // Когда добавим валидацию — бот начнёт их сверять.
+          init_data:
+            window.WebApp && window.WebApp.initData
+              ? window.WebApp.initData
+              : null,
+        };
+      }
+
+      // Блокируем кнопки, чтобы не нажали дважды.
+      function disableButtons() {
+        btnPublish.disabled = true;
+        btnPublishSave.disabled = true;
+      }
+
+      // Разблокируем кнопки после ответа.
+      function enableButtons() {
+        btnPublish.disabled = false;
+        btnPublishSave.disabled = false;
+      }
+
+      // Отправка формы боту.
+      // saveToTemplates: true — с сохранением в шаблоны.
+      async function submitForm(saveToTemplates) {
+        hideStatus();
+
+        const data = collectFormData();
+        data.save_to_templates = saveToTemplates;
+
+        disableButtons();
+        showStatus("loading", "Отправляем на публикацию...");
+
+        try {
+          const response = await fetch(`${API_URL}/api/create_request`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+
+          if (result.ok) {
+            showStatus(
+              "success",
+              "✅ " + (result.message || "Заявка отправлена")
+            );
+          } else {
+            showStatus(
+              "error",
+              "⚠️ " + (result.error || "Бот ответил ошибкой")
+            );
+          }
+        } catch (err) {
+          console.error("Ошибка отправки:", err);
+          showStatus(
+            "error",
+            "⚠️ Не удалось связаться с ботом. Попробуй позже."
+          );
+        } finally {
+          enableButtons();
+        }
+      }
+
+      // Нажатие кнопки «ОПУБЛИКОВАТЬ».
+      btnPublish.addEventListener("click", () => {
+        submitForm(false);
       });
 
-      document
-        .getElementById("btn-publish-save")
-        .addEventListener("click", () => {
-          alert("Кнопка «Сохранить и опубликовать» пока не подключена к боту.");
-        });
+      // Нажатие кнопки «СОХРАНИТЬ и ОПУБЛИКОВАТЬ».
+      btnPublishSave.addEventListener("click", () => {
+        submitForm(true);
+      });
 
       updatePreview();
 
       // Проверяем связь с ботом при загрузке страницы.
-      // Если ответ получен — в консоли браузера увидим сообщение.
-      // Пользователю пока ничего не показываем, просто проверка.
       fetch(`${API_URL}/api/ping`)
         .then((r) => r.json())
         .then((data) => {
