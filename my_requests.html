@@ -1,3 +1,4 @@
+<!-- my_requests.html -->
 <!DOCTYPE html>
 <html lang="ru">
   <head>
@@ -6,50 +7,542 @@
     <title>Мои заявки</title>
     <script src="https://st.max.ru/js/max-web-app.js"></script>
     <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
           sans-serif;
         background: #f2f2f7;
         color: #1c1c1e;
         padding: 16px;
-      }
-
-      .card {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        min-height: 100vh;
       }
 
       h1 {
         font-size: 22px;
         font-weight: 600;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
       }
 
-      p {
-        font-size: 15px;
+      .subtitle {
+        font-size: 14px;
         color: #8e8e93;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 6px;
+      }
+
+      .card-address {
+        font-size: 16px;
+        font-weight: 600;
+        flex: 1;
+      }
+
+      .card-number {
+        font-size: 14px;
+        color: #8e8e93;
+        font-weight: 500;
+      }
+
+      .card-details {
+        font-size: 14px;
+        color: #3a3a3c;
         line-height: 1.5;
+        margin-bottom: 12px;
+      }
+
+      .status-badge {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 8px;
+        margin-top: 6px;
+      }
+
+      .status-SET {
+        background: #eaf4ff;
+        color: #0a84ff;
+      }
+
+      .status-FULL {
+        background: #e3f7e8;
+        color: #1c7c34;
+      }
+
+      .card-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .card-actions-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .card-actions button {
+        flex: 1;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .btn-delete {
+        border: 1.5px solid #ff3b30;
+        background: transparent;
+        color: #ff3b30;
+      }
+
+      .btn-delete:active {
+        background: #ffeaea;
+      }
+
+      .btn-complete {
+        border: 1.5px solid #0a84ff;
+        background: transparent;
+        color: #0a84ff;
+      }
+
+      .btn-complete:active {
+        background: #eaf4ff;
+      }
+
+      .btn-open {
+        border: none;
+        background: #0a84ff;
+        color: #ffffff;
+      }
+
+      .btn-open:active {
+        background: #0060df;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #8e8e93;
+        font-size: 15px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px 20px;
+        color: #8e8e93;
+        font-size: 15px;
+      }
+
+      .status {
+        display: none;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 15px;
+        line-height: 1.5;
+        margin-bottom: 16px;
+      }
+
+      .status.show {
+        display: block;
+      }
+
+      .status.error {
+        background: #ffeaea;
+        color: #c52c2c;
+      }
+
+      .status.success {
+        background: #e3f7e8;
+        color: #1c7c34;
+      }
+
+      .back-link {
+        display: inline-block;
+        color: #0a84ff;
+        text-decoration: none;
+        font-size: 15px;
+        margin-top: 16px;
+      }
+
+      /* Модальное подтверждение удаления заявки в КОМПЛЕКТ */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 100;
+      }
+
+      .modal.hidden {
+        display: none;
+      }
+
+      .modal-content {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        max-width: 340px;
+        width: 100%;
+      }
+
+      .modal-text {
+        font-size: 15px;
+        line-height: 1.5;
+        color: #1c1c1e;
+        margin-bottom: 16px;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .modal-actions button {
+        flex: 1;
+        padding: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .btn-yes {
+        border: none;
+        background: #ff3b30;
+        color: #ffffff;
+      }
+
+      .btn-yes:active {
+        background: #d02922;
+      }
+
+      .btn-no {
+        border: 1.5px solid #0a84ff;
+        background: transparent;
+        color: #0a84ff;
+      }
+
+      .btn-no:active {
+        background: #eaf4ff;
       }
     </style>
   </head>
   <body>
-    <div class="card">
-      <h1>📋 Мои заявки</h1>
-      <p>
-        Тестовая страница. Если ты видишь это — роутер работает, и разные кнопки
-        действительно открывают разные страницы.
-      </p>
-      <p style="margin-top: 12px">
-        <a
-          href="index.html?startapp=create"
-          style="color: #0a84ff; text-decoration: none"
-        >
-          ← Вернуться к созданию
-        </a>
-      </p>
+    <h1>📋 Мои заявки</h1>
+    <p class="subtitle">Здесь только активные заявки — НАБОР и КОМПЛЕКТ</p>
+
+    <div class="status" id="status"></div>
+    <div id="list"></div>
+
+    <a class="back-link" href="index.html?startapp=create">
+      ← Вернуться к созданию
+    </a>
+
+    <!-- Модальное подтверждение удаления заявки в КОМПЛЕКТ -->
+    <div class="modal hidden" id="confirm-modal">
+      <div class="modal-content">
+        <div class="modal-text" id="confirm-text"></div>
+        <div class="modal-actions">
+          <button class="btn-yes" id="confirm-yes">ДА, УДАЛИТЬ</button>
+          <button class="btn-no" id="confirm-no">ОТМЕНА</button>
+        </div>
+      </div>
     </div>
+
+    <script>
+      // Адрес API бота.
+      const API_URL = "https://khaki-bugs-hide.loca.lt";
+
+      const listBox = document.getElementById("list");
+      const statusBox = document.getElementById("status");
+      const modal = document.getElementById("confirm-modal");
+      const confirmText = document.getElementById("confirm-text");
+      const confirmYes = document.getElementById("confirm-yes");
+      const confirmNo = document.getElementById("confirm-no");
+
+      // ID заявки, которую сейчас подтверждаем к удалению.
+      let pendingDeleteId = null;
+
+      // Достаём initData из MAX — бот проверит подпись и достанет user_id.
+      function getInitData() {
+        if (window.WebApp && window.WebApp.initData) {
+          return window.WebApp.initData;
+        }
+        return null;
+      }
+
+      function showError(text) {
+        statusBox.className = "status show error";
+        statusBox.textContent = text;
+      }
+
+      function showSuccess(text) {
+        statusBox.className = "status show success";
+        statusBox.textContent = text;
+      }
+
+      function hideStatus() {
+        statusBox.className = "status";
+        statusBox.textContent = "";
+      }
+
+      // Экранирование пользовательских данных.
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      // Человекочитаемый статус.
+      function statusLabel(code) {
+        if (code === "SET") return "НАБОР";
+        if (code === "FULL") return "КОМПЛЕКТ";
+        return code;
+      }
+
+      // Собираем карточку одной заявки.
+      function renderRequest(r) {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const statusClass = r.status === "FULL" ? "status-FULL" : "status-SET";
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="card-address">${escapeHtml(r.address)}</div>
+            <div class="card-number">#${r.id}</div>
+          </div>
+          <div class="card-details">
+            <div>${r.time}  (${r.date})</div>
+            <div><span class="status-badge ${statusClass}">${statusLabel(
+          r.status
+        )}</span></div>
+          </div>
+          <div class="card-actions">
+            <div class="card-actions-row">
+              <button class="btn-delete">УДАЛИТЬ</button>
+              <button class="btn-complete">ЗАВЕРШИТЬ</button>
+            </div>
+            <button class="btn-open">К ЗАЯВКЕ</button>
+          </div>
+        `;
+
+        card.querySelector(".btn-delete").addEventListener("click", () => {
+          onDeleteClick(r);
+        });
+
+        card.querySelector(".btn-complete").addEventListener("click", () => {
+          onCompleteClick(r);
+        });
+
+        card.querySelector(".btn-open").addEventListener("click", () => {
+          onOpenClick(r);
+        });
+
+        return card;
+      }
+
+      // Нажатие УДАЛИТЬ.
+      // НАБОР — удаляем сразу. КОМПЛЕКТ — показываем подтверждение.
+      function onDeleteClick(r) {
+        hideStatus();
+
+        if (r.status === "FULL") {
+          pendingDeleteId = r.id;
+          confirmText.textContent =
+            "Заявка в статусе КОМПЛЕКТ. За удаление начисляется " +
+            "1 штрафной балл. Удалить?";
+          modal.classList.remove("hidden");
+          return;
+        }
+
+        // НАБОР — без подтверждения.
+        doDeleteRequest(r.id, false);
+      }
+
+      // Нажатие ЗАВЕРШИТЬ.
+      async function onCompleteClick(r) {
+        hideStatus();
+
+        // Быстрая проверка на фронте — чтобы не гонять запрос зря.
+        // Полноценная проверка всё равно на бэке.
+        if (r.status === "SET") {
+          showError("Завершить можно только заявку в статусе КОМПЛЕКТ.");
+          return;
+        }
+
+        const initData = getInitData();
+        if (!initData) {
+          showError("Не удалось определить пользователя. Открой через MAX.");
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_URL}/api/complete_request/${r.id}`,
+            {
+              method: "POST",
+              headers: {
+                "X-Init-Data": initData,
+              },
+            }
+          );
+          const result = await response.json();
+
+          if (!result.ok) {
+            showError(result.error || "Не удалось завершить заявку.");
+            return;
+          }
+
+          showSuccess("✅ " + (result.message || "Заявка завершена."));
+          await loadRequests();
+        } catch (err) {
+          console.error("Ошибка завершения:", err);
+          showError("Не удалось связаться с ботом. Попробуй позже.");
+        }
+      }
+
+      // Нажатие К ЗАЯВКЕ — открываем пост в канале внутри MAX.
+      function onOpenClick(r) {
+        const url = r.post_url;
+        if (!url) {
+          showError("Ссылка на заявку недоступна.");
+          return;
+        }
+
+        // openMaxLink открывает max-ссылки внутри MAX, а обычные —
+        // во внешнем браузере. Наш post_url всегда max-формата.
+        if (window.WebApp && window.WebApp.openMaxLink) {
+          window.WebApp.openMaxLink(url);
+        } else {
+          // Fallback: если открыто в браузере без MAX Bridge.
+          window.open(url, "_blank");
+        }
+      }
+
+      // Отправляем запрос на удаление.
+      async function doDeleteRequest(requestId, applyPenalty) {
+        const initData = getInitData();
+        if (!initData) {
+          showError("Не удалось определить пользователя. Открой через MAX.");
+          return;
+        }
+
+        hideStatus();
+
+        try {
+          const response = await fetch(
+            `${API_URL}/api/delete_request/${requestId}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Init-Data": initData,
+              },
+              body: JSON.stringify({ apply_penalty: applyPenalty }),
+            }
+          );
+          const result = await response.json();
+
+          if (!result.ok) {
+            showError(result.error || "Не удалось удалить заявку.");
+            return;
+          }
+
+          showSuccess("✅ " + (result.message || "Заявка удалена."));
+          await loadRequests();
+        } catch (err) {
+          console.error("Ошибка удаления:", err);
+          showError("Не удалось связаться с ботом. Попробуй позже.");
+        }
+      }
+
+      // Обработчики модального подтверждения.
+      confirmYes.addEventListener("click", () => {
+        const id = pendingDeleteId;
+        pendingDeleteId = null;
+        modal.classList.add("hidden");
+        if (id !== null) {
+          doDeleteRequest(id, true);
+        }
+      });
+
+      confirmNo.addEventListener("click", () => {
+        pendingDeleteId = null;
+        modal.classList.add("hidden");
+      });
+
+      // Загрузка списка активных заявок.
+      async function loadRequests() {
+        hideStatus();
+        listBox.innerHTML = '<div class="loading">Загружаем заявки...</div>';
+
+        const initData = getInitData();
+        if (!initData) {
+          listBox.innerHTML = "";
+          showError("Не удалось определить пользователя. Открой через MAX.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/api/my_requests`, {
+            headers: {
+              "X-Init-Data": initData,
+            },
+          });
+          const result = await response.json();
+
+          if (!result.ok) {
+            listBox.innerHTML = "";
+            showError("Ошибка: " + (result.error || "неизвестная"));
+            return;
+          }
+
+          if (!result.requests || result.requests.length === 0) {
+            listBox.innerHTML =
+              '<div class="empty">📭 У тебя нет активных заявок</div>';
+            return;
+          }
+
+          listBox.innerHTML = "";
+          result.requests.forEach((r) => {
+            listBox.appendChild(renderRequest(r));
+          });
+        } catch (err) {
+          console.error("Ошибка загрузки:", err);
+          listBox.innerHTML = "";
+          showError("Не удалось связаться с ботом. Попробуй позже.");
+        }
+      }
+
+      // При загрузке страницы.
+      loadRequests();
+    </script>
   </body>
 </html>
