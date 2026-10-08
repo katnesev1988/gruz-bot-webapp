@@ -1,0 +1,478 @@
+<!-- stats.html -->
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Статистика</title>
+    <script src="https://st.max.ru/js/max-web-app.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f2f2f7;
+        color: #1c1c1e;
+        padding: 16px;
+        min-height: 100vh;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        color: #8e8e93;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+
+      .card-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #8e8e93;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+      }
+
+      /* Личная статистика */
+      .stats-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .stats-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .stats-col {
+        flex: 1;
+        background: #f9f9fb;
+        border-radius: 10px;
+        padding: 12px;
+      }
+
+      .stats-col-label {
+        font-size: 12px;
+        color: #8e8e93;
+        margin-bottom: 4px;
+      }
+
+      .stats-col-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1c1c1e;
+      }
+
+      .stats-penalty {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: #f9f9fb;
+        border-radius: 10px;
+      }
+
+      .stats-penalty-value {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .stats-penalty-value.warn {
+        color: #ff3b30;
+      }
+
+      /* Кнопки выбора */
+      .toggle-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .toggle-row button {
+        flex: 1;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 1.5px solid #e5e5ea;
+        background: #ffffff;
+        color: #1c1c1e;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .toggle-row button.active {
+        border-color: #0a84ff;
+        background: #0a84ff;
+        color: #ffffff;
+      }
+
+      .period-row {
+        display: flex;
+        gap: 6px;
+      }
+
+      .period-row button {
+        flex: 1;
+        padding: 10px 6px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1.5px solid #e5e5ea;
+        background: #ffffff;
+        color: #1c1c1e;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .period-row button.active {
+        border-color: #0a84ff;
+        background: #eaf4ff;
+        color: #0a84ff;
+      }
+
+      /* Топ */
+      .top-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .top-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+
+      .top-item:nth-child(odd) {
+        background: #f9f9fb;
+      }
+
+      .top-position {
+        font-size: 14px;
+        font-weight: 600;
+        color: #8e8e93;
+        min-width: 28px;
+      }
+
+      .top-name {
+        flex: 1;
+        font-size: 15px;
+        font-weight: 500;
+        color: #1c1c1e;
+      }
+
+      .top-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0a84ff;
+      }
+
+      /* Состояния */
+      .empty {
+        text-align: center;
+        padding: 30px 20px;
+        color: #8e8e93;
+        font-size: 15px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 30px 20px;
+        color: #8e8e93;
+        font-size: 15px;
+      }
+
+      .status {
+        display: none;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 15px;
+        line-height: 1.5;
+        margin-bottom: 16px;
+      }
+
+      .status.show {
+        display: block;
+      }
+
+      .status.error {
+        background: #ffeaea;
+        color: #c52c2c;
+      }
+
+      .back-link {
+        display: inline-block;
+        color: #0a84ff;
+        text-decoration: none;
+        font-size: 15px;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📊 Статистика</h1>
+    <p class="subtitle">Личная статистика и ТОП по периодам</p>
+
+    <div class="status" id="status"></div>
+
+    <!-- Личная статистика -->
+    <div class="card">
+      <div class="card-title">Твоя статистика</div>
+
+      <div class="stats-row">
+        <div class="stats-col">
+          <div class="stats-col-label">Создано сегодня</div>
+          <div class="stats-col-value" id="today-created">—</div>
+        </div>
+        <div class="stats-col">
+          <div class="stats-col-label">Выполнено сегодня</div>
+          <div class="stats-col-value" id="today-taken">—</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stats-col">
+          <div class="stats-col-label">Создано всего</div>
+          <div class="stats-col-value" id="total-created">—</div>
+        </div>
+        <div class="stats-col">
+          <div class="stats-col-label">Выполнено всего</div>
+          <div class="stats-col-value" id="total-taken">—</div>
+        </div>
+      </div>
+
+      <div class="stats-penalty" style="margin-top: 12px">
+        <div class="stats-col-label">Штрафные баллы</div>
+        <div class="stats-penalty-value" id="penalty">—</div>
+      </div>
+    </div>
+
+    <!-- Топы -->
+    <div class="card">
+      <div class="card-title">ТОП</div>
+
+      <div class="toggle-row">
+        <button id="tab-disp" class="active">ДИСПЕТЧЕРЫ</button>
+        <button id="tab-load">ГРУЗЧИКИ</button>
+      </div>
+
+      <div class="period-row">
+        <button data-period="today" class="active">СЕГОДНЯ</button>
+        <button data-period="week">НЕДЕЛЯ</button>
+        <button data-period="month">МЕСЯЦ</button>
+        <button data-period="year">ГОД</button>
+        <button data-period="all">ОБЩИЙ</button>
+      </div>
+
+      <div id="top-list" style="margin-top: 14px">
+        <div class="loading">Загружаем...</div>
+      </div>
+    </div>
+
+    <a class="back-link" href="index.html?startapp=create">
+      ← Вернуться к созданию
+    </a>
+
+    <script>
+      const API_URL = "https://khaki-bugs-hide.loca.lt";
+
+      const statusBox = document.getElementById("status");
+
+      const todayCreated = document.getElementById("today-created");
+      const todayTaken = document.getElementById("today-taken");
+      const totalCreated = document.getElementById("total-created");
+      const totalTaken = document.getElementById("total-taken");
+      const penaltyBox = document.getElementById("penalty");
+
+      const tabDisp = document.getElementById("tab-disp");
+      const tabLoad = document.getElementById("tab-load");
+      const periodButtons = document.querySelectorAll(".period-row button");
+      const topListBox = document.getElementById("top-list");
+
+      // Текущее состояние — какая вкладка и какой период открыты.
+      let currentType = "disp";
+      let currentPeriod = "today";
+
+      function getInitData() {
+        if (window.WebApp && window.WebApp.initData) {
+          return window.WebApp.initData;
+        }
+        return null;
+      }
+
+      function showError(text) {
+        statusBox.className = "status show error";
+        statusBox.textContent = text;
+      }
+
+      function hideStatus() {
+        statusBox.className = "status";
+        statusBox.textContent = "";
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      // Загрузка личной статистики.
+      async function loadPersonal() {
+        const initData = getInitData();
+        if (!initData) {
+          showError("Не удалось определить пользователя. Открой через MAX.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/api/stats/personal`, {
+            headers: { "X-Init-Data": initData },
+          });
+          const result = await response.json();
+
+          if (!result.ok) {
+            showError(result.error || "Не удалось загрузить статистику.");
+            return;
+          }
+
+          const s = result.stats;
+          todayCreated.textContent = s.today_created;
+          todayTaken.textContent = s.today_taken;
+          totalCreated.textContent = s.total_created;
+          totalTaken.textContent = s.total_taken;
+          penaltyBox.textContent = s.penalty;
+
+          // Подсветка штрафов, если их много.
+          if (s.penalty >= 5) {
+            penaltyBox.classList.add("warn");
+          } else {
+            penaltyBox.classList.remove("warn");
+          }
+        } catch (err) {
+          console.error("Ошибка личной статистики:", err);
+          showError("Не удалось связаться с ботом.");
+        }
+      }
+
+      // Загрузка топа.
+      async function loadTop() {
+        const initData = getInitData();
+        if (!initData) {
+          topListBox.innerHTML = "";
+          return;
+        }
+
+        topListBox.innerHTML = '<div class="loading">Загружаем...</div>';
+
+        try {
+          const url =
+            `${API_URL}/api/stats/top` +
+            `?type=${encodeURIComponent(currentType)}` +
+            `&period=${encodeURIComponent(currentPeriod)}`;
+
+          const response = await fetch(url, {
+            headers: { "X-Init-Data": initData },
+          });
+          const result = await response.json();
+
+          if (!result.ok) {
+            topListBox.innerHTML = "";
+            showError(result.error || "Не удалось загрузить топ.");
+            return;
+          }
+
+          if (!result.top || result.top.length === 0) {
+            topListBox.innerHTML =
+              '<div class="empty">Пока нет данных за этот период</div>';
+            return;
+          }
+
+          topListBox.innerHTML = "";
+          const list = document.createElement("div");
+          list.className = "top-list";
+
+          result.top.forEach((row, index) => {
+            const item = document.createElement("div");
+            item.className = "top-item";
+
+            let name = "";
+            if (row.first_name && row.last_name) {
+              name = `${row.first_name} ${row.last_name}`;
+            } else if (row.first_name) {
+              name = row.first_name;
+            } else {
+              name = `id:${row.user_id}`;
+            }
+
+            item.innerHTML = `
+              <div class="top-position">${index + 1}</div>
+              <div class="top-name">${escapeHtml(name)}</div>
+              <div class="top-value">${row.value}</div>
+            `;
+            list.appendChild(item);
+          });
+
+          topListBox.appendChild(list);
+        } catch (err) {
+          console.error("Ошибка топа:", err);
+          topListBox.innerHTML = "";
+          showError("Не удалось связаться с ботом.");
+        }
+      }
+
+      // Переключение вкладки ДИСПЕТЧЕРЫ / ГРУЗЧИКИ.
+      tabDisp.addEventListener("click", () => {
+        currentType = "disp";
+        tabDisp.classList.add("active");
+        tabLoad.classList.remove("active");
+        hideStatus();
+        loadTop();
+      });
+
+      tabLoad.addEventListener("click", () => {
+        currentType = "load";
+        tabLoad.classList.add("active");
+        tabDisp.classList.remove("active");
+        hideStatus();
+        loadTop();
+      });
+
+      // Переключение периода.
+      periodButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          periodButtons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentPeriod = btn.dataset.period;
+          hideStatus();
+          loadTop();
+        });
+      });
+
+      // При загрузке страницы.
+      hideStatus();
+      loadPersonal();
+      loadTop();
+    </script>
+  </body>
+</html>
